@@ -22,6 +22,9 @@
 <script>
 	console.log(window.location)
 var loc = window.location
+var formData = $("#form")
+var msgInput = $("#id_message")
+
 var wsStart = 'ws://' //Websockets have a different protocol than HTTP and that is ws://
 
 if(loc.protocol=='https:'){
@@ -37,6 +40,7 @@ var socket = new WebSocket(endpoint)
 
 // Methods which will run for the websocket
 
+// When message is sent to websocket
 socket.onmessage = function(e){
 
 	console.log("message",e)
@@ -46,14 +50,27 @@ socket.onmessage = function(e){
 
 
 
-
+// when a connection is opened to a websocket
 socket.onopen= function(e){
 
 	console.log("open",e)
+	formData.submit(function(event){ // As soon as the form submits we prevent the default action
+
+		event.preventDefault()	
+		var msgText = msgInput.val()  
+		//var formDataSerialized = formData.serialize()
+		var finalData = {
+		'message':msgText
+		}
+		socket.send(JSON.stringify(finalData))
+		formData[0].reset()
+
+	})
+
 
 }
 
-
+// when an error is encountered by the web socket
 socket.onerror= function(e){
 
 	console.log("error",e)
@@ -61,6 +78,7 @@ socket.onerror= function(e){
 }
 
 
+// when the connection to the web socket is closed
 socket.onclose= function(e){
 
 	console.log("close",e)
