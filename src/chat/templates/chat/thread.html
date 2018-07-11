@@ -3,16 +3,17 @@
 {% block content %}
 <h3>Thread for {% if user != object.first %}{{ object.first }}{% else %}{{ object.second }}{% endif %}</h3>
 <ul id='chat-items'>
-	{% for chat in object.chatmessage_set.all %}
+    {% for chat in object.chatmessage_set.all %}
 
-	<li>{{ chat.message }} via {{ chat.user }}</li>
+    <li>{{ chat.message }} via {{ chat.user }}</li>
 
-	{% endfor %}
+    {% endfor %}
 </ul>
 
 <form id='form' method='POST'> {% csrf_token %}
-	{{form.as_p }}
-	<input type='submit' class='btn btn-primary'/>
+    <input type="hidden" id="myUsername" value="{{user.username}}">
+    {{form.as_p }}
+    <input type='submit' class='btn btn-primary'/>
 </form>
 
 {% endblock %}
@@ -20,73 +21,71 @@
 {% block script %}
 
 <script>
-	console.log(window.location)
-var loc = window.location
-var formData = $("#form")
-var msgInput = $("#id_message")
+    console.log(window.location)
+    var loc = window.location
+    var formData = $("#form")
+    var msgInput = $("#id_message")
+    var chatHolder = $("#chat-items")
+    var me = $("#myUsername").val()
 
-var wsStart = 'ws://' //Websockets have a different protocol than HTTP and that is ws://
+    var wsStart = 'ws://' //Websockets have a different protocol than HTTP and that is ws://
 
-if(loc.protocol=='https:'){
+    if (loc.protocol == 'https:') {
 
-	wsStart = 'wss://' 
+        wsStart = 'wss://'
 
-}
-var endpoint = wsStart+loc.host+loc.pathname
-
-
-
-var socket = new WebSocket(endpoint)
-
-// Methods which will run for the websocket
-
-// When message is sent to websocket
-socket.onmessage = function(e){
-
-	console.log("message",e)
-
-}
+    }
+    var endpoint = wsStart + loc.host + loc.pathname
 
 
+    var socket = new WebSocket(endpoint)
+
+    // Methods which will run for the websocket
+
+    // When message is sent to websocket
+    socket.onmessage = function (e) {
+
+        console.log("message", e)
+        var chatDataMsg = JSON.parse(e.data)
+        chatHolder.append("<li>" + chatDataMsg.message + " via " + chatDataMsg.username + "</li>")
+
+    }
 
 
-// when a connection is opened to a websocket
-socket.onopen= function(e){
+    // when a connection is opened to a websocket
+    socket.onopen = function (e) {
 
-	console.log("open",e)
-	formData.submit(function(event){ // As soon as the form submits we prevent the default action
+        console.log("open", e)
+        formData.submit(function (event) { // As soon as the form submits we prevent the default action
+            event.preventDefault()
+            var msgText = msgInput.val()
+            chatHolder.append("<li>" + msgText + " via " + me + "</li>")
+            //var formDataSerialized = formData.serialize()
+            var finalData = {
+                'message': msgText
+            }
+            socket.send(JSON.stringify(finalData))
+            formData[0].reset()
 
-		event.preventDefault()	
-		var msgText = msgInput.val()  
-		//var formDataSerialized = formData.serialize()
-		var finalData = {
-		'message':msgText
-		}
-		socket.send(JSON.stringify(finalData))
-		formData[0].reset()
-
-	})
-
-
-}
-
-// when an error is encountered by the web socket
-socket.onerror= function(e){
-
-	console.log("error",e)
-
-}
+        })
 
 
-// when the connection to the web socket is closed
-socket.onclose= function(e){
+    }
 
-	console.log("close",e)
+    // when an error is encountered by the web socket
+    socket.onerror = function (e) {
 
-}
+        console.log("error", e)
+
+    }
 
 
+    // when the connection to the web socket is closed
+    socket.onclose = function (e) {
 
+        console.log("close", e)
+
+    }
 
 
 </script>
