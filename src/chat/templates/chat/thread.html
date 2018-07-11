@@ -20,6 +20,9 @@
 
 {% block script %}
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.js"></script>
+
+
 <script>
     console.log(window.location)
     var loc = window.location
@@ -38,7 +41,7 @@
     var endpoint = wsStart + loc.host + loc.pathname
 
 
-    var socket = new WebSocket(endpoint)
+    var socket = new ReconnectingWebSocket(endpoint)
 
     // Methods which will run for the websocket
 
@@ -59,7 +62,7 @@
         formData.submit(function (event) { // As soon as the form submits we prevent the default action
             event.preventDefault()
             var msgText = msgInput.val()
-            chatHolder.append("<li>" + msgText + " via " + me + "</li>")
+            // chatHolder.append("<li>" + msgText + " via " + me + "</li>")
             //var formDataSerialized = formData.serialize()
             var finalData = {
                 'message': msgText
